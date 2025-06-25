@@ -5,12 +5,12 @@ import java.util.*;
 public class CustomList<T> implements List<T> {
 
     public static final int INITIAL_CAPACITY = 10;
-    private Object[] list;
-    private int size;
+    private T[] list;
+    private int size = 0;
 
+    @SuppressWarnings("unchecked")
     public CustomList() {
-        this.list = new Object[INITIAL_CAPACITY];
-        this.size = 0;
+        this.list = (T[]) new Object[INITIAL_CAPACITY];
     }
 
     /**
@@ -57,7 +57,7 @@ public class CustomList<T> implements List<T> {
      * {@inheritDoc}
      */
     @Override
-    public boolean add(Object element) {
+    public boolean add(T element) {
         // Ensure there is enough capacity, then add the element and increment size
         ensureCapacity();
         list[size] = element;
@@ -71,9 +71,8 @@ public class CustomList<T> implements List<T> {
     @Override
     public boolean remove(Object element) {
         // Iterate through the list to find the first occurrence of the element and remove it
-        for (int index = 0; index < size + 1; index++) {
-            if (element == null && list[index] == null ||
-                    (element != null && element.equals(list[index]))) {
+        for (int index = 0; index < size; index++) {
+            if (Objects.equals(element, list[index])) {
                 remove(index);
                 return true;
             }
@@ -102,7 +101,7 @@ public class CustomList<T> implements List<T> {
      */
     @Override
     public void clear() {
-        list = new Object[INITIAL_CAPACITY];
+        list = (T[]) new Object[INITIAL_CAPACITY];
         size = 0;
     }
 
@@ -112,7 +111,7 @@ public class CustomList<T> implements List<T> {
     @Override
     public T get(int index) {
         isIndexValid(index);
-        return (T) list[index];
+        return list[index];
     }
 
 
@@ -120,12 +119,12 @@ public class CustomList<T> implements List<T> {
      * {@inheritDoc}
      */
     @Override
-    public T set(int index, Object element) {
+    public T set(int index, T element) {
         // Validate the index, replace the element at the given index, and return the old value
         isIndexValid(index);
-        Object old = list[index];
+        T old = list[index];
         list[index] = element;
-        return (T) old;
+        return old;
     }
 
     /**
@@ -143,10 +142,10 @@ public class CustomList<T> implements List<T> {
     public T remove(int index) {
         // Validate the index, store the old value, shift elements left, decrease size, and return the removed element
         isIndexValid(index);
-        Object old = list[index];
-        size--;
-        System.arraycopy(list, index + 1, list, index, size);
-        return (T) old;
+        T old = list[index];
+        System.arraycopy(list, index + 1, list, index, (size - index - 1));
+        list[--size] = null;
+        return old;
     }
 
     /**
@@ -233,7 +232,7 @@ public class CustomList<T> implements List<T> {
         // If the current array is full, double its capacity and copy elements to the new array
         if (list.length <= size) {
             int newCapacity = list.length * 2;
-            Object[] tempList = new Object[newCapacity];
+            T[] tempList = (T[]) new Object[newCapacity];
             System.arraycopy(list, 0, tempList, 0, size);
             list = tempList;
         }
