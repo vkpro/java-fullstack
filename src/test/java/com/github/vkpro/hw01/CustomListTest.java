@@ -15,12 +15,18 @@ class CustomListTest {
     // Add any List implementation here (e.g., ArrayList, LinkedList, etc) to test them
     // Provides a stream of List<String> implementations for parameterized tests
     static Stream<List<String>> listProvider() {
-        return Stream.of(new CustomList<>());
+        return Stream.of(
+                new CustomList<>()
+//                ,new ArrayList<>()
+        );
     }
 
     // Provides a stream of List<Integer> implementations for parameterized tests
     static Stream<List<Integer>> intListProvider() {
-        return Stream.of(new CustomList<>());
+        return Stream.of(
+                new CustomList<>()
+//                , new ArrayList<>()
+        );
     }
 
     @ParameterizedTest(name = "{index} => list={0}")
@@ -188,5 +194,68 @@ class CustomListTest {
         for (int i = 0; i < 1000; i++) {
             assertEquals("item" + i, bigList.get(i));
         }
+    }
+
+    @ParameterizedTest(name = "{index} => list={0}")
+    @MethodSource("listProvider")
+    @DisplayName("add(index, element) should insert element at index and shift to the right others")
+    void addAtIndex(List<String> list) {
+        list.add("A");
+        list.add("C");
+        list.add(1, "B");
+        assertEquals(3, list.size());
+        assertEquals("A", list.get(0));
+        assertEquals("B", list.get(1));
+        assertEquals("C", list.get(2));
+    }
+
+    @ParameterizedTest(name = "{index} => list={0}")
+    @MethodSource("listProvider")
+    @DisplayName("add() should correctly add 4 elements")
+    void addFourElements(List<String> list) {
+        assertTrue(list.add("one"));
+        assertTrue(list.add("two"));
+        assertTrue(list.add("three"));
+        assertTrue(list.add("four"));
+        assertEquals(4, list.size());
+        assertEquals("one", list.get(0));
+        assertEquals("two", list.get(1));
+        assertEquals("three", list.get(2));
+        assertEquals("four", list.get(3));
+    }
+
+    @ParameterizedTest(name = "{index} => list={0}")
+    @MethodSource("listProvider")
+    @DisplayName("add(index == size, element) should insert at end without exception")
+    void addAtEnd(List<String> list) {
+        list.add("A");
+        list.add("B");
+        list.add(2, "C");
+        assertEquals(3, list.size());
+        assertEquals("C", list.get(2));
+        assertThrows(IndexOutOfBoundsException.class, () -> list.add(4, "D"));
+    }
+
+    @ParameterizedTest(name = "{index} => list={0}")
+    @MethodSource("listProvider")
+    @DisplayName("add(index, element) should throw IndexOutOfBoundsException for invalid indices")
+    void addAtIndex_outOfBounds(List<String> list) {
+        assertThrows(IndexOutOfBoundsException.class, () -> list.add(1, "A"));
+        list.add("A");
+        assertThrows(IndexOutOfBoundsException.class, () -> list.add(-1, "B"));
+        assertThrows(IndexOutOfBoundsException.class, () -> list.add(2, "B"));
+    }
+
+    @ParameterizedTest(name = "{index} => list={0}")
+    @MethodSource("listProvider")
+    @DisplayName("contains() should return true if element is present")
+    void containsTest(List<String> list) {
+        list.add("A");
+        list.add("B");
+        list.add(null);
+        assertTrue(list.contains("A"));
+        assertTrue(list.contains("B"));
+        assertTrue(list.contains(null));
+        assertFalse(list.contains("C"));
     }
 }

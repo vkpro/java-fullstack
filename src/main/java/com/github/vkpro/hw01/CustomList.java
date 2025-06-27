@@ -34,6 +34,11 @@ public class CustomList<T> implements List<T> {
      */
     @Override
     public boolean contains(Object element) {
+        for (int i = 0; i < size; i++) {
+            if (Objects.equals(element, list[i])) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -110,7 +115,7 @@ public class CustomList<T> implements List<T> {
      */
     @Override
     public T get(int index) {
-        isIndexValid(index);
+        validateIndex(index);
         return list[index];
     }
 
@@ -121,7 +126,7 @@ public class CustomList<T> implements List<T> {
     @Override
     public T set(int index, T element) {
         // Validate the index, replace the element at the given index, and return the old value
-        isIndexValid(index);
+        validateIndex(index);
         T old = list[index];
         list[index] = element;
         return old;
@@ -131,8 +136,12 @@ public class CustomList<T> implements List<T> {
      * {@inheritDoc}
      */
     @Override
-    public void add(int index, Object element) {
-
+    public void add(int index, T element) {
+        validateIndexForAdd(index);
+        ensureCapacity();
+        shiftRight(index);
+        list[index] = element;
+        size++;
     }
 
     /**
@@ -141,12 +150,13 @@ public class CustomList<T> implements List<T> {
     @Override
     public T remove(int index) {
         // Validate the index, store the old value, shift elements left, decrease size, and return the removed element
-        isIndexValid(index);
+        validateIndex(index);
         T old = list[index];
-        System.arraycopy(list, index + 1, list, index, (size - index - 1));
+        shiftLeft(index);
         list[--size] = null;
         return old;
     }
+
 
     /**
      * {@inheritDoc}
@@ -220,12 +230,17 @@ public class CustomList<T> implements List<T> {
         return new Object[0];
     }
 
-    private void isIndexValid(int index) {
+    private void validateIndex(int index) {
         // Checks if the index is within the valid range for the list
-        if (index >= 0 && index < size) {
-            return;
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
         }
-        throw new IndexOutOfBoundsException();
+    }
+    private void validateIndexForAdd(int index) {
+        // for add, it can be inserted at the end
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException();
+        }
     }
 
     private void ensureCapacity() {
@@ -235,6 +250,20 @@ public class CustomList<T> implements List<T> {
             T[] tempList = (T[]) new Object[newCapacity];
             System.arraycopy(list, 0, tempList, 0, size);
             list = tempList;
+        }
+    }
+
+    private void shiftLeft(int index) {
+        // Shifts all elements one position to the left
+        for (int i = index; i < size - 1; i++) {
+            list[i] = list[i + 1];
+        }
+    }
+
+    private void shiftRight(int index) {
+        // Shifts all elements one position to the right
+        for (int i = size; i > index; i--) {
+            list[i] = list[i - 1];
         }
     }
 }
