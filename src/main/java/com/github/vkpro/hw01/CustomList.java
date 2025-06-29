@@ -254,10 +254,7 @@ public class CustomList<T> implements List<T> {
     }
 
     private void shiftLeft(int index) {
-        // Shifts all elements one position to the left
-        for (int i = index; i < size - 1; i++) {
-            list[i] = list[i + 1];
-        }
+            System.arraycopy(list, index + 1, list, index, size - index - 1);
     }
 
     private void shiftRight(int index) {

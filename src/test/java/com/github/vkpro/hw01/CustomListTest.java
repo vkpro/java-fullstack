@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -17,7 +18,7 @@ class CustomListTest {
     static Stream<List<String>> listProvider() {
         return Stream.of(
                 new CustomList<>()
-//                ,new ArrayList<>()
+                , new ArrayList<>()
         );
     }
 
@@ -25,7 +26,7 @@ class CustomListTest {
     static Stream<List<Integer>> intListProvider() {
         return Stream.of(
                 new CustomList<>()
-//                , new ArrayList<>()
+                , new ArrayList<>()
         );
     }
 
