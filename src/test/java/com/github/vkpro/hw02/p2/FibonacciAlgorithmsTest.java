@@ -1,7 +1,5 @@
 package com.github.vkpro.hw02.p2;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -9,7 +7,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FibonacciAlgorithmsTest {
 
@@ -32,10 +31,16 @@ class FibonacciAlgorithmsTest {
         assertEquals(result, FibonacciAlgorithms.fibonacciRecursive(input));
     }
 
-    @ParameterizedTest(name = "fibonacciRecursive({0}) = {1}")
+    @ParameterizedTest(name = "testFibonacciMemoized({0}) = {1}")
     @MethodSource("fibonacciNumbers")
     void testFibonacciMemoized(int input, long result) {
         assertEquals(result, FibonacciAlgorithms.fibonacciMemoized(input));
+    }
+
+    @ParameterizedTest(name = "fibonacciIterative({0}) = {1}")
+    @MethodSource("fibonacciNumbers")
+    void fibonacciIterative(int input, long result) {
+        assertEquals(result, FibonacciAlgorithms.fibonacciIterative(input));
     }
 
     @Test
@@ -45,6 +50,11 @@ class FibonacciAlgorithmsTest {
 
     @Test
     void testFibonacciMemoized_NegativeInput() {
+        assertThrows(IllegalArgumentException.class, () -> FibonacciAlgorithms.fibonacciMemoized(-1));
+    }
+
+    @Test
+    void testFibonacciIterative_NegativeInput() {
         assertThrows(IllegalArgumentException.class, () -> FibonacciAlgorithms.fibonacciMemoized(-1));
     }
 }

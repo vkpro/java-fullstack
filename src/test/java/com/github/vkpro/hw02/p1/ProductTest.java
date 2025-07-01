@@ -1,6 +1,5 @@
-package com.github.vkpro.hw02;
+package com.github.vkpro.hw02.p1;
 
-import com.github.vkpro.hw02.p1.Product;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

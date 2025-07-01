@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class FibonacciAlgorithms {
 
-    private static HashMap<Integer, Long> cachedNumbers = new HashMap<>();
+    private static final HashMap<Integer, Long> cachedNumbers = new HashMap<>();
 
     /**
      * Recursive implementation of Fibonacci sequence
@@ -54,6 +54,32 @@ public class FibonacciAlgorithms {
         }
     }
 
+    /**
+     * Iterative implementation of Fibonacci sequence
+     * Time Complexity: O(n) - single loop from 0 to n
+     * Space Complexity: O(1) - constant space usage
+     * <p>
+     * Explanation: Uses bottom-up approach with only two variables
+     * to track previous values, eliminating recursion overhead.
+     */
+    public static long fibonacciIterative(int n) {
+        if (n < 0) {
+            throw new IllegalArgumentException();
+        }
+        if (n <= 1) {
+            return n;
+        }
+        long num1 = 0;
+        long num2 = 1;
+        long result = 0;
+        // First two values are handled by if condition
+        for (int i = 2; i <= n; i++) {
+            result = num1 + num2;
+            num1 = num2;
+            num2 = result;
+        }
+        return result;
+    }
 
     public static void main(String[] args) {
         long fibonacciRecursive = fibonacciRecursive(8);
