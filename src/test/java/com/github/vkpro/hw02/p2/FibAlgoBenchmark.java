@@ -20,8 +20,8 @@ public class FibAlgoBenchmark {
             long endTime = System.currentTimeMillis();
             long afterUsedMem = getMemory();
             double durationMs = endTime - startTime;
-            double memoryUsed = (afterUsedMem - beforeUsedMem) / (1024.0 * 1024.0);
-            System.out.printf("FibNumber = %d, Duration = %.2f ms, Memory Used = %.2f MB\n", num, durationMs, memoryUsed);
+            double memoryUsed = (afterUsedMem - beforeUsedMem) / (1024.0);
+            System.out.printf("FibNumber = %d, Duration = %.2f ms, Memory Used = %.2f kB\n", num, durationMs, memoryUsed);
         }
     }
 
