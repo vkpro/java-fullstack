@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.stream.Stream;
 
@@ -39,7 +40,7 @@ class FibonacciAlgorithmsTest {
 
     @ParameterizedTest(name = "fibonacciIterative({0}) = {1}")
     @MethodSource("fibonacciNumbers")
-    void fibonacciIterative(int input, long result) {
+    void testFibonacciIterative(int input, long result) {
         assertEquals(result, FibonacciAlgorithms.fibonacciIterative(input));
     }
 
@@ -56,5 +57,16 @@ class FibonacciAlgorithmsTest {
     @Test
     void testFibonacciIterative_NegativeInput() {
         assertThrows(IllegalArgumentException.class, () -> FibonacciAlgorithms.fibonacciMemoized(-1));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35})
+    void testAllImplementationsProduceIdentiaclResults(int num) {
+        long fibRec = FibonacciAlgorithms.fibonacciRecursive(num);
+        long fibMem = FibonacciAlgorithms.fibonacciMemoized(num);
+        long fibIter = FibonacciAlgorithms.fibonacciIterative(num);
+        assertEquals(fibRec, fibMem);
+        assertEquals(fibRec, fibIter);
     }
 }
