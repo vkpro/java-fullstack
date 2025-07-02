@@ -48,7 +48,7 @@ public class FibonacciAlgorithms {
         if (cachedNumbers.containsKey(n)) {
             return cachedNumbers.get(n);
         } else {
-            result = fibonacciRecursive(n - 1) + fibonacciRecursive(n - 2);
+            result = fibonacciMemoized(n - 1) + fibonacciMemoized(n - 2);
             cachedNumbers.put(n, result);
             return result;
         }
