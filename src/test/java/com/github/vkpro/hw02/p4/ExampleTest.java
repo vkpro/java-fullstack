@@ -3,7 +3,7 @@ package com.github.vkpro.hw02.p4;
 public class ExampleTest {
     @Test
     public void testSuccess() throws InterruptedException {
-        Thread.sleep(1);
+        Thread.sleep(10);
         assert true;
     }
 

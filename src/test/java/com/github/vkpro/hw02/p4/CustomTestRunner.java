@@ -11,92 +11,160 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
+/*
+- Scans a given package for .class files and loads them.
+- Finds methods annotated with @Test.
+- Runs each test method
+- Report Results
+ */
 public class CustomTestRunner {
+
     public static void main(String[] args) {
-        CustomTestRunner.runTestsInPackage("com.github.vkpro.hw02.p4");
+        String packageName = "com.github.vkpro.hw02.p4";
+        runTestsInPackage(packageName);
     }
 
+    /**
+     * Runs all test methods in all classes found in the specified package.
+     */
     public static void runTestsInPackage(String packageName) {
-        Set<Class<?>> classesInPackage;
+        Set<Class<?>> classes;
         try {
-            classesInPackage = getClassesInPackage(packageName);
+            classes = findClassesInPackage(packageName);
         } catch (Exception e) {
-            System.err.println("Failed to scan package: " + e);
+            System.err.println("Failed to load classes from package: " + e);
             return;
         }
-        System.out.println("\nclassesInPackage = " + classesInPackage);
-        int passed = 0;
-        int failed = 0;
 
-        for (Class<?> testClass : classesInPackage) {
+        int totalTests = 0;
+        int passedTests = 0;
+        int failedTests = 0;
+        long totalExecutionTimeMs = 0;
 
-            int[] classResults = new int[2];
-            runAllCustomTestsInClass(testClass, classResults);
-            passed += classResults[0];
-            failed += classResults[1];
+        System.out.printf("""
+                \n=== Custom Test Runner Results ===
+                Package: %s
+                Classes scanned: %d
+                Test Results:
+                %n""", packageName, classes.size());
+
+        for (Class<?> clazz : classes) {
+            var results = runTestsInClass(clazz);
+            totalTests += results.testsRun();
+            passedTests += results.testsPassed();
+            failedTests += results.testsFailed();
+            totalExecutionTimeMs += results.executionTimeMs();
         }
-        displayTestResults(passed, failed);
-//        System.out.printf("Result: Passed: %d, Failed: %d%n", passed, failed);
+
+        System.out.printf("""
+                                
+                        Summary:
+                        Total tests: %d
+                        Passed: %d
+                        Failed: %d
+                        Total execution time: %dms
+                        Success rate: %.1f%%
+                        """, totalTests, passedTests, failedTests, totalExecutionTimeMs,
+                totalTests == 0 ? 0.0 : (passedTests * 100.0) / totalTests);
     }
 
-    private static void displayTestResults(int passed, int failed) {
-        int total = passed + failed;
-        System.out.println("\n========== Test Results ========");
-        System.out.printf("Total tests: %d\n", total);
-        System.out.printf("Passed:     %d\n", passed);
-        System.out.printf("Failed:     %d\n", failed);
-        System.out.println("==================================");
-    }
+    /**
+     * Finds all classes in the given package.
+     */
+    private static Set<Class<?>> findClassesInPackage(String packageName)
+            throws IOException, ClassNotFoundException, URISyntaxException {
 
-    private static void runAllCustomTestsInClass(Class<?> testClass, int[] results) {
-        for (Method method : testClass.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Test.class)) {
-                System.out.println(testClass);
-                runSingleCustomTest(testClass, method, results);
-            }
-        }
-    }
-
-    private static void runSingleCustomTest(Class<?> testClass, Method method, int[] results) {
-        try {
-            var constructor = testClass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            Object instance = constructor.newInstance();
-            method.setAccessible(true);
-            long start = System.nanoTime();
-            method.invoke(instance);
-            long end = System.nanoTime();
-            long durationMs = (end - start) / 1_000_000;
-            System.out.printf("    %s PASSED (%d ms)%n", method.getName(), durationMs);
-            results[0]++;
-        } catch (Throwable ex) {
-            System.out.printf("    %s FAILED: %s%n", method.getName(), ex.getCause());
-            results[1]++;
-        }
-    }
-
-    private static Set<Class<?>> getClassesInPackage(String packageName) throws IOException, ClassNotFoundException, URISyntaxException {
+        // Converts a package name to a path and uses the class loader to locate its directory.
         Set<Class<?>> classes = new HashSet<>();
         String path = packageName.replace('.', '/');
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         URL resource = classLoader.getResource(path);
         if (resource == null) {
+            System.err.println("No resource found for package: " + packageName);
             return classes;
         }
-        if (!"file".equals(resource.getProtocol())) {
-            System.err.println("Unsupported resource protocol: " + resource.getProtocol());
-            return classes;
-        }
-        Path dir = Paths.get(resource.toURI());
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.class")) {
+        Path directory = Paths.get(resource.toURI());
+
+        // Converts each .class file to a full class name and add them into the classes set
+        // e.g. `com.github.vkpro.hw02.p4.ExampleTest`
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory, "*.class")) {
             for (Path entry : stream) {
                 String fileName = entry.getFileName().toString();
-                if (fileName.endsWith(".class")) {
-                    String className = packageName + "." + fileName.substring(0, fileName.length() - 6);
-                    classes.add(Class.forName(className));
-                }
+                String className = packageName + "." + fileName.substring(0, fileName.length() - 6);
+                classes.add(Class.forName(className));
             }
         }
+
         return classes;
+    }
+
+    /**
+     * Runs test methods in a class and collect results.
+     */
+    private static TestResults runTestsInClass(Class<?> clazz) {
+        Method[] methods = clazz.getDeclaredMethods();
+        int passed = 0;
+        int failed = 0;
+        long classExecutionTime = 0;
+        int testCount = 0;
+
+        for (Method method : methods) {
+            if (method.isAnnotationPresent(Test.class)) {
+                testCount++;
+                var result = runSingleTest(clazz, method);
+                if (result.passed()) {
+                    passed++;
+                } else {
+                    failed++;
+                }
+                classExecutionTime += result.executionTimeMs();
+            }
+        }
+
+        return new TestResults(testCount, passed, failed, classExecutionTime);
+    }
+
+
+
+    /**
+     * Run a single test method and print detailed result.
+     */
+    private static SingleTestResult runSingleTest(Class<?> clazz, Method method) {
+        Object instance;
+        try {
+            var constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            instance = constructor.newInstance();
+        } catch (Exception e) {
+            System.out.printf("✗ %s.%s (0ms) - Failed to instantiate test class: %s%n",
+                    clazz.getSimpleName(), method.getName(), e.getMessage());
+            return new SingleTestResult(false, 0);
+        }
+
+        long startTime = System.currentTimeMillis();
+        try {
+            method.setAccessible(true);
+            method.invoke(instance);
+            long durationMs = (System.currentTimeMillis() - startTime);
+            System.out.printf("✓ %s.%s (%dms)%n", clazz.getSimpleName(), method.getName(), durationMs);
+            return new SingleTestResult(true, durationMs);
+        } catch (Throwable t) {
+            long durationMs = (System.currentTimeMillis() - startTime);
+            Throwable cause = t.getCause() != null ? t.getCause() : t;
+            System.out.printf("✗ %s.%s (%dms) - %s%n", clazz.getSimpleName(), method.getName(), durationMs, cause);
+            return new SingleTestResult(false, durationMs);
+        }
+    }
+
+    /**
+     * The result of a single test method run.
+     */
+    private record SingleTestResult(boolean passed, long executionTimeMs) {
+    }
+
+    /**
+     * Test run results for a class.
+     */
+    private record TestResults(int testsRun, int testsPassed, int testsFailed, long executionTimeMs) {
     }
 }
