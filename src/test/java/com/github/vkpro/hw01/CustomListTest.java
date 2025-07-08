@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("List Implementations Unit Tests")
-class CustomListTest {
+public class CustomListTest {
 
     // Add any List implementation here (e.g., ArrayList, LinkedList, etc) to test them
     // Provides a stream of List<String> implementations for parameterized tests
