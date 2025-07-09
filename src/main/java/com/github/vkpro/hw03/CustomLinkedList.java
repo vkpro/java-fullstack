@@ -209,12 +209,3 @@ public class CustomLinkedList<T> implements List<T> {
         return current;
     }
 }
-
-class Node<T> {
-    T data;
-    Node<T> next;
-
-    Node(T data) {
-        this.data = data;
-    }
-}
