@@ -5,6 +5,7 @@ import java.util.*;
 public class CustomLinkedList<T> implements List<T> {
 
     private Node<T> head = null;
+    private Node<T> tail = null;
     private int size = 0;
 
     @Override
@@ -12,12 +13,10 @@ public class CustomLinkedList<T> implements List<T> {
         var newNode = new Node<>(element);
         if (head == null) {
             head = newNode;
+            tail = newNode;
         } else {
-            var current = head;
-            while (current.next != null) {
-                current = current.next;
-            }
-            current.next = newNode;
+            tail.next = newNode;    // Add to the end
+            tail = newNode;
         }
         size++;
         return true;
@@ -32,6 +31,12 @@ public class CustomLinkedList<T> implements List<T> {
         if (index == 0) {
             newNode.next = head;
             head = newNode;
+            if (tail == null) {     // If list was empty
+                tail = newNode;
+            }
+        } else if (index == size) {
+            tail.next = newNode;    // Add to the end
+            tail = newNode;
         } else {
             var prev = getNode(index - 1);
             newNode.next = prev.next;
@@ -43,21 +48,26 @@ public class CustomLinkedList<T> implements List<T> {
     @Override
     public T remove(int index) {
         checkIndex(index);
-        T removed;
 
+        // Remove head
         if (index == 0) {
-            removed = head.data;
+            T removed = head.data;
             head = head.next;
-        } else {
-            var prev = head;
-            for (int i = 0; i < index - 1; i++) {
-                prev = prev.next;
-            }
-            removed = prev.next.data;
-            prev.next = prev.next.next; // unlink the node
+            size--;
+            if (head == null) tail = null;
+            return removed;
         }
 
+        // Remove non-head
+        Node<T> prev = getNode(index - 1);
+        T removed = prev.next.data;
+        prev.next = prev.next.next;
         size--;
+
+        if (prev.next == null) {
+            tail = prev;
+        }
+
         return removed;
     }
 
