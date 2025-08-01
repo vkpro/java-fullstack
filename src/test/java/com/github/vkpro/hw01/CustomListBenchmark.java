@@ -1,9 +1,13 @@
 package com.github.vkpro.hw01;
 
-import java.util.*;
+import com.github.vkpro.hw03.CustomLinkedList;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Performance comparison for ArrayList, LinkedList, and CustomList implementations.
+ * Performance comparison for ArrayList, LinkedList, CustomList and CustomLinkedList implementations.
  */
 public class CustomListBenchmark {
     // Number of elements for insertion test
@@ -15,14 +19,16 @@ public class CustomListBenchmark {
         // Insertion performance test
         System.out.println("--- Insertion Performance (" + INSERTION_COUNT + " items) ---");
         measureInsertion("ArrayList", new ArrayList<>());
-        measureInsertion("LinkedList", new LinkedList<>());
         measureInsertion("CustomList", new CustomList<>());
+        measureInsertion("LinkedList", new LinkedList<>());
+        measureInsertion("CustomLinkedList", new CustomLinkedList<>());
 
         // Add/remove cycle performance test
         System.out.println("\n--- Add/Remove Cycle (" + CYCLE_COUNT + " cycles) ---");
         measureAddRemoveCycle("ArrayList", new ArrayList<>());
-        measureAddRemoveCycle("LinkedList", new LinkedList<>());
         measureAddRemoveCycle("CustomList", new CustomList<>());
+        measureAddRemoveCycle("LinkedList", new LinkedList<>());
+        measureAddRemoveCycle("CustomLinkedList", new CustomLinkedList<>());
     }
 
     /**
