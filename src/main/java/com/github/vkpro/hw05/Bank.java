@@ -1,7 +1,6 @@
 package com.github.vkpro.hw05;
 
 import lombok.Getter;
-import lombok.Synchronized;
 
 import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
@@ -10,9 +9,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Bank {
 
     private final long[] accountBalances;
+    private final ReentrantLock[] accountLocks;
     @Getter
     private final int numberOfAccounts;
-    private final ReentrantLock lock = new ReentrantLock();
 
     public Bank(int numberOfAccounts, long minBalance, long maxBalance) {
         // Validate input parameters
@@ -20,8 +19,13 @@ public class Bank {
 
         this.numberOfAccounts = numberOfAccounts;
         this.accountBalances = new long[numberOfAccounts];
+        this.accountLocks = new ReentrantLock[numberOfAccounts];
 
-        // Initialize each account with random balance
+        // Initialize locks for each account
+        for (int i = 0; i < numberOfAccounts; i++) {
+            accountLocks[i] = new ReentrantLock();
+        }
+
         initializeAccountsWithRandomBalances(minBalance, maxBalance);
     }
 
@@ -77,7 +81,6 @@ public class Bank {
         return totalSum;
     }
 
-//    @Synchronized
     public void transfer(int fromAccountId, int toAccountId, long amount) {
         validateAccountId(fromAccountId);
         validateAccountId(toAccountId);
@@ -90,17 +93,26 @@ public class Bank {
             throw new IllegalArgumentException("Transfer amount must be positive");
         }
 
-        if (accountBalances[fromAccountId] < amount) {
-            return; // Insufficient funds
-        }
+        // Lock in consistent order to prevent deadlock
+        int firstLock = Math.min(fromAccountId, toAccountId);
+        int secondLock = Math.max(fromAccountId, toAccountId);
 
-        // Perform the transfer
-        lock.lock();
+        accountLocks[firstLock].lock();
         try {
-            accountBalances[fromAccountId] -= amount;
-            accountBalances[toAccountId] += amount;
+            accountLocks[secondLock].lock();
+            try {
+                if (accountBalances[fromAccountId] < amount) {
+                    return; // Insufficient funds
+                }
+
+                // Perform the transfer
+                accountBalances[fromAccountId] -= amount;
+                accountBalances[toAccountId] += amount;
+            } finally {
+                accountLocks[secondLock].unlock();
+            }
         } finally {
-            lock.unlock();
+            accountLocks[firstLock].unlock();
         }
     }
 
