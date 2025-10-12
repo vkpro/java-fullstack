@@ -86,7 +86,8 @@ public class CustomWebServer {
     }
 
     private void handleClient(Socket client) {
-        try (var in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+        try (client;
+             var in = new BufferedReader(new InputStreamReader(client.getInputStream()));
              var out = client.getOutputStream()) {
 
             String requestLine = in.readLine();
@@ -115,8 +116,6 @@ public class CustomWebServer {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            try { client.close(); } catch (Exception ignored) {}
         }
     }
 
@@ -148,14 +147,22 @@ public class CustomWebServer {
     }
 
     private void serveFile(OutputStream out, String fileName) throws IOException {
-        Path filePath = Paths.get(STATIC_DIR, fileName);
+        Path staticDir = Paths.get(STATIC_DIR).toAbsolutePath().normalize();  // Absolute and normalized root
+        Path requestedPath = Paths.get(STATIC_DIR, fileName).normalize();     // Normalize the requested path (removes ../)
 
-        if (!Files.exists(filePath)) {
+        // Check: requestedPath must start with staticDir (does not escape boundaries)
+        if (!requestedPath.startsWith(staticDir)) {
+            sendError(out, 403, "Forbidden");  // Deny access
+            return;
+        }
+
+        // Additionally: Check that the file exists and is a regular file (not a directory)
+        if (!Files.exists(requestedPath) || !Files.isRegularFile(requestedPath)) {
             sendError(out, 404, "Not Found");
             return;
         }
 
-        byte[] content = Files.readAllBytes(filePath);
+        byte[] content = Files.readAllBytes(requestedPath);
 
         out.write("HTTP/1.1 200 OK\r\nContent-Length: ".getBytes());
         out.write(String.valueOf(content.length).getBytes());
