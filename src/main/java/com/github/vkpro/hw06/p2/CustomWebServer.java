@@ -1,6 +1,7 @@
 package com.github.vkpro.hw06.p2;
 
 import com.github.vkpro.hw06.p1.CustomExecutorService;
+import lombok.Getter;
 
 import java.io.*;
 import java.net.*;
@@ -13,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CustomWebServer {
     public static final String STATIC_DIR = "src/main/resources/static";
+    @Getter
     private final int port;
     private final CustomExecutorService executor;
     private ServerSocket serverSocket;
@@ -119,7 +121,7 @@ public class CustomWebServer {
         }
     }
 
-    private void handleEndpoint(OutputStream out, String method, String path, String body) throws IOException {
+    protected void handleEndpoint(OutputStream out, String method, String path, String body) throws IOException {
         switch (method + " " + path) {
             case "GET /" -> serveFile(out, "index.html");
             case "GET /api/time" -> sendJson(out, "{\"time\": \"" + java.time.Instant.now() + "\"}");
@@ -139,7 +141,7 @@ public class CustomWebServer {
         }
     }
 
-    private void sendJson(OutputStream out, String json) throws IOException {
+    protected void sendJson(OutputStream out, String json) throws IOException {
         String response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n" +
                 "Content-Length: " + json.length() + "\r\n\r\n" + json;
         out.write(response.getBytes());
@@ -148,7 +150,7 @@ public class CustomWebServer {
 
     private void serveFile(OutputStream out, String fileName) throws IOException {
         Path staticDir = Paths.get(STATIC_DIR).toAbsolutePath().normalize();  // Absolute and normalized root
-        Path requestedPath = Paths.get(STATIC_DIR, fileName).normalize();     // Normalize the requested path (removes ../)
+        Path requestedPath = Paths.get(STATIC_DIR, fileName).toAbsolutePath().normalize();     // Normalize the requested path (removes ../)
 
         // Check: requestedPath must start with staticDir (does not escape boundaries)
         if (!requestedPath.startsWith(staticDir)) {
@@ -171,7 +173,7 @@ public class CustomWebServer {
         out.flush();
     }
 
-    private void sendError(OutputStream out, int status, String message) throws IOException {
+    protected void sendError(OutputStream out, int status, String message) throws IOException {
         String body = "<html><body><h1>" + status + " " + message + "</h1></body></html>";
         String response = "HTTP/1.1 " + status + " " + message + "\r\n" + "Content-Type: text/html\r\n" + "Content-Length: " + body.length() + "\r\n\r\n" + body;
         out.write(response.getBytes());
