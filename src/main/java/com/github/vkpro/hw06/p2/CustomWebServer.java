@@ -149,22 +149,29 @@ public class CustomWebServer {
     }
 
     private void serveFile(OutputStream out, String fileName) throws IOException {
-        Path staticDir = Paths.get(STATIC_DIR).toAbsolutePath().normalize();  // Absolute and normalized root
-        Path requestedPath = Paths.get(STATIC_DIR, fileName).toAbsolutePath().normalize();     // Normalize the requested path (removes ../)
+        byte[] content = null;
 
-        // Check: requestedPath must start with staticDir (does not escape boundaries)
-        if (!requestedPath.startsWith(staticDir)) {
-            sendError(out, 403, "Forbidden");  // Deny access
-            return;
+        // Try to load from classpath (works in JAR)
+        try (InputStream is = getClass().getResourceAsStream("/static/" + fileName)) {
+            if (is != null) {
+                content = is.readAllBytes();
+            }
         }
 
-        // Additionally: Check that the file exists and is a regular file (not a directory)
-        if (!Files.exists(requestedPath) || !Files.isRegularFile(requestedPath)) {
-            sendError(out, 404, "Not Found");
-            return;
-        }
+        // Fallback: load from filesystem (works in IDE)
+        if (content == null) {
+            Path staticDir = Paths.get(STATIC_DIR).toAbsolutePath().normalize();
+            Path requestedPath = Paths.get(STATIC_DIR, fileName).toAbsolutePath().normalize();
 
-        byte[] content = Files.readAllBytes(requestedPath);
+            if (!requestedPath.startsWith(staticDir)
+                    || !Files.exists(requestedPath)
+                    || !Files.isRegularFile(requestedPath)) {
+                sendError(out, 404, "Not Found");
+                return;
+            }
+
+            content = Files.readAllBytes(requestedPath);
+        }
 
         out.write("HTTP/1.1 200 OK\r\nContent-Length: ".getBytes());
         out.write(String.valueOf(content.length).getBytes());
