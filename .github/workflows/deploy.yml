@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   workflow_dispatch:
   push:
-    branches: [ master, gha/ ]
+    branches: [ master, 'gha/*' ]
 
 jobs:
   build-and-deploy:
