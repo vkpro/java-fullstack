@@ -1,0 +1,7 @@
+.git
+target
+node_modules
+*.log
+*.iml
+.idea
+k6
